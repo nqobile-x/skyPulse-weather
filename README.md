@@ -13,6 +13,12 @@ A modern, beautifully designed weather app built with Flutter. SkyPulse delivers
 |:---:|:---:|:---:|
 | ![Current Weather](screenshots/home_screen.png) | ![Hourly Forecast](screenshots/hourly_view.png) | ![7-Day Outlook](screenshots/daily_view.png) |
 *(Add your screenshots here: `screenshots/home_screen.png`, etc.)*
+![WhatsApp Image 2026-02-16 at 16 45 06](https://github.com/user-attachments/assets/d4dd8d14-a35e-4c6e-8c6d-6ce24f0b4cf9)
+![WhatsApp Image 2026-02-16 at 16 45 05](https://github.com/user-attachments/assets/d8fd0377-750d-4081-9094-a882b5e79a64)
+
+
+https://github.com/user-attachments/assets/72a732df-cd83-4a93-b5d0-e3fc5384e908
+
 
 ## 🚀 Why I Built This
 
