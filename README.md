@@ -1,4 +1,4 @@
-# SkyPulse Weather
+# SkyPulse Weather ☁️
 
 A modern, beautifully designed weather app built with Flutter. SkyPulse delivers real-time weather data with a premium dark UI, smooth animations, and an intuitive search experience.
 
@@ -6,6 +6,27 @@ A modern, beautifully designed weather app built with Flutter. SkyPulse delivers
 ![Dart](https://img.shields.io/badge/Dart-3.x-0175C2?logo=dart&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-green)
 ![API](https://img.shields.io/badge/API-Open--Meteo-orange)
+
+## 📱 Screenshots
+
+| Current Weather | Hourly Forecast | 7-Day Outlook |
+|:---:|:---:|:---:|
+| ![Current Weather](screenshots/home_screen.png) | ![Hourly Forecast](screenshots/hourly_view.png) | ![7-Day Outlook](screenshots/daily_view.png) |
+*(Add your screenshots here: `screenshots/home_screen.png`, etc.)*
+
+## 🚀 Why I Built This
+
+I built SkyPulse to demonstrate my ability to create **production-ready Flutter applications** that go beyond basic functionality. This project serves as a showcase of:
+
+1.  **Clean Architecture**: Segregating code into `data` (API, models) and `presentation` (UI, widgets) layers to ensure maintainability and testability.
+2.  **Modern UI/UX Design**: Moving away from standard Material widgets to create a custom, high-fidelity interface with:
+    -   Dynamic **gradient backgrounds** that shift based on weather conditions.
+    -   **Glassmorphism** effects for a modern, layered look.
+    -   **Smooth animations** using `flutter_animate` to make the app feel alive.
+3.  **Robust API Integration**: Implementing complex asynchronous data fetching from Open-Meteo, handling loading states, errors, and data transformation efficiently.
+4.  **State Management**: Using `setState` efficiently for this scale, while structuring the app to easily migrate to Riverpod or Bloc for larger iterations.
+
+This app isn't just about fetching data—it's about **delivering a premium user experience** and robust code quality.
 
 ## Features
 
@@ -18,10 +39,6 @@ A modern, beautifully designed weather app built with Flutter. SkyPulse delivers
 - **Smooth Animations** — Entry animations and transitions powered by flutter_animate
 - **Pull to Refresh** — Swipe down to refresh weather data
 - **Custom App Icon** — Branded SkyPulse launcher icon
-
-## Screenshots
-
-The app features a premium dark theme with glassmorphic cards and dynamic gradients that shift based on current weather conditions (clear, cloudy, rain, snow, thunderstorm).
 
 ## Architecture
 
