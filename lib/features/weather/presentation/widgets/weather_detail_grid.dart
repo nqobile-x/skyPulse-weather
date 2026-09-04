@@ -2,57 +2,91 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../data/weather_model.dart';
 
-/// 2×3 grid showing weather details: wind, humidity, UV, pressure, sunrise/sunset.
+/// 2×N grid showing detailed weather metrics.
 class WeatherDetailGrid extends StatelessWidget {
   const WeatherDetailGrid({
     super.key,
     required this.current,
     this.today,
+    required this.isCelsius,
   });
 
   final CurrentWeather current;
   final DailyWeather? today;
+  final bool isCelsius;
 
   @override
   Widget build(BuildContext context) {
+    final visKm = current.visibility / 1000;
+
     final details = <_DetailItem>[
       _DetailItem(
         icon: Icons.air_rounded,
         label: 'Wind',
         value: '${current.windSpeed.round()} km/h',
-        subtitle: _windDirection(current.windDirection),
+        subtitle: '${_windDir(current.windDirection)} · Gusts ${current.windGusts.round()}',
+        color: const Color(0xFF90CAF9),
       ),
       _DetailItem(
         icon: Icons.water_drop_outlined,
         label: 'Humidity',
         value: '${current.humidity}%',
-        subtitle: _humidityLevel(current.humidity),
+        subtitle: _humidityLabel(current.humidity),
+        color: const Color(0xFF4FC3F7),
       ),
       _DetailItem(
         icon: Icons.wb_sunny_outlined,
         label: 'UV Index',
         value: current.uvIndex.toStringAsFixed(1),
-        subtitle: _uvLevel(current.uvIndex),
+        subtitle: _uvLabel(current.uvIndex),
+        color: const Color(0xFFFFD54F),
       ),
       _DetailItem(
         icon: Icons.speed_rounded,
         label: 'Pressure',
         value: '${current.pressure.round()} hPa',
-        subtitle: _pressureLevel(current.pressure),
+        subtitle: _pressureLabel(current.pressure),
+        color: const Color(0xFFCE93D8),
+      ),
+      _DetailItem(
+        icon: Icons.visibility_outlined,
+        label: 'Visibility',
+        value: visKm >= 10 ? '≥10 km' : '${visKm.toStringAsFixed(1)} km',
+        subtitle: _visLabel(visKm),
+        color: const Color(0xFF80CBC4),
+      ),
+      _DetailItem(
+        icon: Icons.cloud_outlined,
+        label: 'Cloud Cover',
+        value: '${current.cloudCover}%',
+        subtitle: _cloudLabel(current.cloudCover),
+        color: const Color(0xFF90A4AE),
       ),
       if (today != null) ...[
         _DetailItem(
           icon: Icons.wb_twilight_rounded,
           label: 'Sunrise',
           value: DateFormat('HH:mm').format(today!.sunrise),
-          subtitle: 'Morning',
+          subtitle: 'Morning golden hour',
+          color: const Color(0xFFFFB74D),
         ),
         _DetailItem(
           icon: Icons.nights_stay_outlined,
           label: 'Sunset',
           value: DateFormat('HH:mm').format(today!.sunset),
-          subtitle: 'Evening',
+          subtitle: 'Evening golden hour',
+          color: const Color(0xFFFF8A65),
         ),
+        if (today!.precipitationSum > 0)
+          _DetailItem(
+            icon: Icons.water_drop_rounded,
+            label: 'Precipitation',
+            value: '${today!.precipitationSum.toStringAsFixed(1)} mm',
+            subtitle: today!.snowfallSum > 0
+                ? '${today!.snowfallSum.toStringAsFixed(1)} mm snow'
+                : '${today!.rainSum.toStringAsFixed(1)} mm rain',
+            color: const Color(0xFF29B6F6),
+          ),
       ],
     ];
 
@@ -63,40 +97,56 @@ class WeatherDetailGrid extends StatelessWidget {
         crossAxisCount: 2,
         mainAxisSpacing: 10,
         crossAxisSpacing: 10,
-        childAspectRatio: 1.7,
+        childAspectRatio: 1.65,
       ),
       itemCount: details.length,
-      itemBuilder: (context, index) {
-        final item = details[index];
-        return _DetailCard(item: item);
-      },
+      itemBuilder: (context, index) => _DetailCard(item: details[index]),
     );
   }
 
-  String _windDirection(int degrees) {
-    const directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
-    final index = ((degrees + 22.5) / 45).floor() % 8;
-    return directions[index];
+  static String _windDir(int deg) {
+    const dirs = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+    return dirs[((deg + 22.5) / 45).floor() % 8];
   }
 
-  String _humidityLevel(int humidity) {
-    if (humidity < 30) return 'Low';
-    if (humidity < 60) return 'Moderate';
-    return 'High';
+  static String _humidityLabel(int h) {
+    if (h < 30) return 'Very dry';
+    if (h < 45) return 'Comfortable';
+    if (h < 60) return 'Moderate';
+    if (h < 75) return 'Moist';
+    return 'Very humid';
   }
 
-  String _uvLevel(double uv) {
-    if (uv <= 2) return 'Low';
-    if (uv <= 5) return 'Moderate';
-    if (uv <= 7) return 'High';
-    if (uv <= 10) return 'Very High';
-    return 'Extreme';
+  static String _uvLabel(double uv) {
+    if (uv <= 2) return 'Low — no protection needed';
+    if (uv <= 5) return 'Moderate — wear sunscreen';
+    if (uv <= 7) return 'High — SPF 30+ required';
+    if (uv <= 10) return 'Very High — seek shade';
+    return 'Extreme — stay indoors';
   }
 
-  String _pressureLevel(double pressure) {
-    if (pressure < 1005) return 'Low';
-    if (pressure < 1020) return 'Normal';
-    return 'High';
+  static String _pressureLabel(double p) {
+    if (p < 1000) return 'Very Low — storms likely';
+    if (p < 1010) return 'Low — unsettled weather';
+    if (p < 1020) return 'Normal — stable';
+    if (p < 1030) return 'High — fair weather';
+    return 'Very High — clear & dry';
+  }
+
+  static String _visLabel(double km) {
+    if (km < 0.2) return 'Dense fog — very dangerous';
+    if (km < 1) return 'Thick fog — dangerous';
+    if (km < 4) return 'Moderate fog — caution';
+    if (km < 10) return 'Haze or mist';
+    return 'Clear visibility';
+  }
+
+  static String _cloudLabel(int cover) {
+    if (cover < 10) return 'Clear sky';
+    if (cover < 30) return 'Mostly clear';
+    if (cover < 60) return 'Partly cloudy';
+    if (cover < 85) return 'Mostly cloudy';
+    return 'Overcast';
   }
 }
 
@@ -106,12 +156,14 @@ class _DetailItem {
     required this.label,
     required this.value,
     required this.subtitle,
+    required this.color,
   });
 
   final IconData icon;
   final String label;
   final String value;
   final String subtitle;
+  final Color color;
 }
 
 class _DetailCard extends StatelessWidget {
@@ -144,16 +196,12 @@ class _DetailCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(
-                item.icon,
-                size: 16,
-                color: Colors.white.withValues(alpha: 0.5),
-              ),
+              Icon(item.icon, size: 14, color: item.color.withValues(alpha: 0.8)),
               const SizedBox(width: 6),
               Text(
                 item.label,
                 style: TextStyle(
-                  fontSize: 12,
+                  fontSize: 11,
                   color: Colors.white.withValues(alpha: 0.5),
                   fontWeight: FontWeight.w500,
                 ),
@@ -163,7 +211,7 @@ class _DetailCard extends StatelessWidget {
           Text(
             item.value,
             style: const TextStyle(
-              fontSize: 22,
+              fontSize: 20,
               color: Colors.white,
               fontWeight: FontWeight.w600,
             ),
@@ -171,10 +219,12 @@ class _DetailCard extends StatelessWidget {
           Text(
             item.subtitle,
             style: TextStyle(
-              fontSize: 12,
-              color: Colors.white.withValues(alpha: 0.5),
+              fontSize: 10,
+              color: Colors.white.withValues(alpha: 0.45),
               fontWeight: FontWeight.w400,
             ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),

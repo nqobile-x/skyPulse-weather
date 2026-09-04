@@ -3,22 +3,23 @@ import 'package:intl/intl.dart';
 import '../../data/weather_model.dart';
 import '../../../../core/constants/weather_icons.dart';
 
-/// Vertical list showing the 7-day forecast.
 class DailyForecastList extends StatelessWidget {
-  const DailyForecastList({super.key, required this.daily});
+  const DailyForecastList({
+    super.key,
+    required this.daily,
+    required this.isCelsius,
+  });
 
   final List<DailyWeather> daily;
+  final bool isCelsius;
 
   @override
   Widget build(BuildContext context) {
-    // Find the global max/min for the temperature bar range
-    final allMax = daily.map((d) => d.temperatureMax).reduce(
-        (a, b) => a > b ? a : b);
-    final allMin = daily.map((d) => d.temperatureMin).reduce(
-        (a, b) => a < b ? a : b);
+    final allMax = daily.map((d) => d.temperatureMax).reduce((a, b) => a > b ? a : b);
+    final allMin = daily.map((d) => d.temperatureMin).reduce((a, b) => a < b ? a : b);
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
         gradient: LinearGradient(
@@ -38,22 +39,25 @@ class DailyForecastList extends StatelessWidget {
         children: List.generate(daily.length, (index) {
           final day = daily[index];
           final isToday = index == 0;
+          final maxTemp = isCelsius
+              ? '${day.temperatureMax.round()}°'
+              : '${_toF(day.temperatureMax).round()}°';
+          final minTemp = isCelsius
+              ? '${day.temperatureMin.round()}°'
+              : '${_toF(day.temperatureMin).round()}°';
 
           return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8),
+            padding: const EdgeInsets.symmetric(vertical: 7),
             child: Row(
               children: [
                 // Day name
                 SizedBox(
-                  width: 48,
+                  width: 52,
                   child: Text(
-                    isToday
-                        ? 'Today'
-                        : DateFormat('EEE').format(day.date),
+                    isToday ? 'Today' : DateFormat('EEE').format(day.date),
                     style: TextStyle(
                       fontSize: 14,
-                      color: Colors.white.withValues(
-                          alpha: isToday ? 1 : 0.8),
+                      color: Colors.white.withValues(alpha: isToday ? 1 : 0.75),
                       fontWeight:
                           isToday ? FontWeight.w600 : FontWeight.w400,
                     ),
@@ -61,38 +65,46 @@ class DailyForecastList extends StatelessWidget {
                 ),
                 // Weather icon
                 SizedBox(
-                  width: 32,
+                  width: 28,
                   child: Icon(
                     WeatherIcons.icon(day.weatherCode),
-                    size: 20,
+                    size: 18,
                     color: WeatherIcons.color(day.weatherCode),
                   ),
                 ),
-                // Precipitation probability
+                // Precipitation
                 SizedBox(
-                  width: 36,
+                  width: 38,
                   child: day.precipitationProbabilityMax > 0
-                      ? Text(
-                          '${day.precipitationProbabilityMax}%',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.lightBlueAccent
-                                .withValues(alpha: 0.8),
-                            fontWeight: FontWeight.w500,
-                          ),
+                      ? Row(
+                          children: [
+                            Icon(
+                              Icons.water_drop_rounded,
+                              size: 10,
+                              color: Colors.lightBlueAccent
+                                  .withValues(alpha: 0.8),
+                            ),
+                            Text(
+                              '${day.precipitationProbabilityMax}%',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: Colors.lightBlueAccent
+                                    .withValues(alpha: 0.8),
+                              ),
+                            ),
+                          ],
                         )
                       : const SizedBox.shrink(),
                 ),
                 // Min temp
                 SizedBox(
-                  width: 32,
+                  width: 36,
                   child: Text(
-                    '${day.temperatureMin.round()}°',
+                    minTemp,
                     textAlign: TextAlign.right,
                     style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.white.withValues(alpha: 0.5),
-                      fontWeight: FontWeight.w400,
+                      fontSize: 13,
+                      color: Colors.white.withValues(alpha: 0.45),
                     ),
                   ),
                 ),
@@ -109,11 +121,11 @@ class DailyForecastList extends StatelessWidget {
                 const SizedBox(width: 8),
                 // Max temp
                 SizedBox(
-                  width: 32,
+                  width: 36,
                   child: Text(
-                    '${day.temperatureMax.round()}°',
+                    maxTemp,
                     style: const TextStyle(
-                      fontSize: 14,
+                      fontSize: 13,
                       color: Colors.white,
                       fontWeight: FontWeight.w600,
                     ),
@@ -126,9 +138,10 @@ class DailyForecastList extends StatelessWidget {
       ),
     );
   }
+
+  static double _toF(double c) => c * 9 / 5 + 32;
 }
 
-/// Gradient temperature bar showing min–max range relative to global range.
 class _TemperatureBar extends StatelessWidget {
   const _TemperatureBar({
     required this.min,
@@ -146,29 +159,26 @@ class _TemperatureBar extends StatelessWidget {
     final endFraction = range > 0 ? (max - globalMin) / range : 1.0;
 
     return SizedBox(
-      height: 6,
+      height: 5,
       child: LayoutBuilder(
         builder: (context, constraints) {
           final totalWidth = constraints.maxWidth;
           final left = startFraction * totalWidth;
-          final barWidth =
-              (endFraction - startFraction) * totalWidth;
+          final barWidth = (endFraction - startFraction) * totalWidth;
 
           return Stack(
             children: [
-              // Track
               Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(3),
-                  color: Colors.white.withValues(alpha: 0.08),
+                  color: Colors.white.withValues(alpha: 0.07),
                 ),
               ),
-              // Active bar
               Positioned(
                 left: left,
                 child: Container(
-                  width: barWidth.clamp(4, totalWidth),
-                  height: 6,
+                  width: barWidth.clamp(4.0, totalWidth),
+                  height: 5,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(3),
                     gradient: const LinearGradient(

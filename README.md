@@ -1,6 +1,6 @@
 # SkyPulse Weather ☁️
 
-A modern, beautifully designed weather app built with Flutter. SkyPulse delivers real-time weather data with a premium dark UI, smooth animations, and an intuitive search experience.
+A modern, beautifully designed weather app built with Flutter. SkyPulse delivers real-time weather data with a premium dark UI, GPU-rendered animated weather scenes, and ARIA — an AI weather assistant that speaks your forecast.
 
 ![Flutter](https://img.shields.io/badge/Flutter-3.x-02569B?logo=flutter&logoColor=white)
 ![Dart](https://img.shields.io/badge/Dart-3.x-0175C2?logo=dart&logoColor=white)
@@ -24,25 +24,25 @@ https://github.com/user-attachments/assets/72a732df-cd83-4a93-b5d0-e3fc5384e908
 
 I built SkyPulse to demonstrate my ability to create **production-ready Flutter applications** that go beyond basic functionality. This project serves as a showcase of:
 
-1.  **Clean Architecture**: Segregating code into `data` (API, models) and `presentation` (UI, widgets) layers to ensure maintainability and testability.
-2.  **Modern UI/UX Design**: Moving away from standard Material widgets to create a custom, high-fidelity interface with:
-    -   Dynamic **gradient backgrounds** that shift based on weather conditions.
-    -   **Glassmorphism** effects for a modern, layered look.
-    -   **Smooth animations** using `flutter_animate` to make the app feel alive.
-3.  **Robust API Integration**: Implementing complex asynchronous data fetching from Open-Meteo, handling loading states, errors, and data transformation efficiently.
-4.  **State Management**: Using `setState` efficiently for this scale, while structuring the app to easily migrate to Riverpod or Bloc for larger iterations.
+1.  **Clean Architecture**: Segregating code into `data` (API, models), `presentation` (UI, widgets), and `core` (services, constants) layers for maintainability and testability.
+2.  **Custom GPU Rendering**: Building animated weather scenes entirely with `CustomPainter` — no external asset files. Rain, snow, lightning, sun rays, and stars are all drawn at runtime using static particle arrays allocated once at class load time, eliminating heap churn during `paint()`.
+3.  **AI-Powered Voice Assistant (ARIA)**: A rule-based AI engine that analyses live weather data and generates natural-language briefings spoken aloud via TTS — greeting by time of day, condition summary, wind/rain/UV/visibility alerts, and a week outlook.
+4.  **Performance-First Design**: `RepaintBoundary` isolates the animated scene layer from the scroll tree. A single `AnimationController` is synced to `vsync`. `ValueNotifier<bool>` drives the waveform animation reactively without triggering parent rebuilds. A `_fetchVersion` counter discards stale API responses from rapid city switching.
+5.  **Modern UI/UX**: Hero layout with 88px ultra-thin temperature display (Apple Weather style), condition-keyed dark backgrounds, and smooth entry animations via `flutter_animate`.
 
-This app isn't just about fetching data—it's about **delivering a premium user experience** and robust code quality.
+This app isn't just about fetching data — it's about **delivering a premium user experience** backed by robust, optimised code.
 
 ## Features
 
-- **Real-Time Weather** — Current temperature, conditions, feels-like, and more
-- **24-Hour Forecast** — Horizontally scrollable hourly forecast strip
-- **7-Day Forecast** — Daily forecast with gradient temperature bars
-- **Weather Details** — Wind speed, humidity, UV index, pressure, sunrise/sunset
-- **City Search** — Autocomplete location search with debounced API calls
-- **Dynamic Backgrounds** — Gradient backgrounds that change based on weather conditions
-- **Smooth Animations** — Entry animations and transitions powered by flutter_animate
+- **ARIA AI Assistant** — Rule-based weather AI that generates spoken briefings with time-of-day greetings, condition summaries, wind/rain/UV/visibility alerts, and a week outlook
+- **Animated Weather Scenes** — GPU-rendered scenes for sun, night, cloud, rain, snow, fog, and storm; drawn with `CustomPainter`, zero external assets
+- **Real-Time Weather** — Current temperature, feels-like, humidity, wind speed, UV index, visibility, and more
+- **24-Hour Forecast** — Horizontally scrollable hourly forecast strip with local timezone times
+- **7-Day Forecast** — Daily forecast with high/low temperatures and condition icons
+- **Atmospheric Details** — Wind, humidity, UV index, pressure, visibility, sunrise/sunset
+- **City Search** — Autocomplete location search with debounced API calls; each city uses its own lat/lon for accurate local data
+- **Timezone-Aware** — All times displayed in the searched city's local timezone, not the device's
+- **C°/F° Toggle** — Unit preference persisted across sessions via shared preferences
 - **Pull to Refresh** — Swipe down to refresh weather data
 - **Custom App Icon** — Branded SkyPulse launcher icon
 
@@ -52,21 +52,26 @@ The project follows a clean, feature-based architecture:
 
 ```
 lib/
-├── main.dart                          # App entry point
+├── main.dart
 ├── core/
-│   └── constants/
-│       ├── api_constants.dart         # Open-Meteo API URLs
-│       └── weather_icons.dart         # WMO code → icon/color mapping
+│   ├── constants/
+│   │   ├── api_constants.dart         # Open-Meteo API URLs
+│   │   └── weather_icons.dart         # WMO code → icon/color/description mapping
+│   └── services/
+│       └── aria_voice.dart            # TTS service with ValueNotifier<bool> speaking state
 └── features/
+    ├── ai/
+    │   └── jarvis_weather_ai.dart     # AriaWeatherAI — analyze() + generateBriefing()
     └── weather/
         ├── data/
         │   ├── weather_model.dart     # Weather data models
-        │   ├── weather_service.dart   # API service layer
+        │   ├── weather_service.dart   # Open-Meteo API + geocoding service
         │   └── location_model.dart    # Geocoding search model
         └── presentation/
-            ├── weather_screen.dart    # Main screen
+            ├── weather_screen.dart    # Main screen — hero layout, ARIA integration
             └── widgets/
-                ├── current_weather_card.dart
+                ├── weather_scene.dart         # CustomPainter animated weather scenes
+                ├── aria_panel.dart            # ARIA panel — insights, briefing, waveform, speak button
                 ├── hourly_forecast_strip.dart
                 ├── daily_forecast_list.dart
                 ├── weather_detail_grid.dart
@@ -79,9 +84,10 @@ lib/
 - **Language**: Dart 3.x
 - **API**: [Open-Meteo](https://open-meteo.com/) (free, no API key required)
 - **HTTP**: `http` package
-- **Fonts**: Google Fonts (Outfit)
-- **Animations**: flutter_animate
-- **Loading Effects**: shimmer
+- **Fonts**: Google Fonts
+- **Animations**: `flutter_animate` + custom `AnimationController` + `CustomPainter`
+- **Text-to-Speech**: `flutter_tts` (Android system TTS — no cloud dependency)
+- **Persistence**: `shared_preferences`
 
 ## Getting Started
 
@@ -89,7 +95,7 @@ lib/
 
 - Flutter SDK 3.11+
 - Android Studio / VS Code with Flutter extension
-- An Android device or emulator
+- An Android device or emulator (API 21+)
 
 ### Installation
 
@@ -116,6 +122,7 @@ This app uses the [Open-Meteo API](https://open-meteo.com/), which is:
 - No API key required
 - Provides current weather, hourly, and daily forecasts
 - Includes geocoding search for city lookup
+- Returns timezone data so local times are always accurate per city
 
 ## License
 

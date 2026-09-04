@@ -3,32 +3,34 @@ import 'package:intl/intl.dart';
 import '../../data/weather_model.dart';
 import '../../../../core/constants/weather_icons.dart';
 
-/// Horizontal scrolling strip showing hourly forecasts (next 24 hours).
 class HourlyForecastStrip extends StatelessWidget {
-  const HourlyForecastStrip({super.key, required this.hourly});
+  const HourlyForecastStrip({
+    super.key,
+    required this.hourly,
+    required this.isCelsius,
+    required this.locationNow,
+  });
 
   final List<HourlyWeather> hourly;
+  final bool isCelsius;
+  final DateTime locationNow;
 
   @override
   Widget build(BuildContext context) {
-    final now = DateTime.now();
-    // Filter to show the next 24 hours
-    final upcoming = hourly.where((h) => h.time.isAfter(now)).take(24).toList();
+    final upcoming = hourly.where((h) => h.time.isAfter(locationNow)).take(24).toList();
 
     return SizedBox(
-      height: 130,
+      height: 138,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         physics: const BouncingScrollPhysics(),
         itemCount: upcoming.length,
         separatorBuilder: (_, _) => const SizedBox(width: 8),
         itemBuilder: (context, index) {
-          final hour = upcoming[index];
-          final isNow = index == 0;
-
           return _HourlyItem(
-            hour: hour,
-            isNow: isNow,
+            hour: upcoming[index],
+            isNow: index == 0,
+            isCelsius: isCelsius,
           );
         },
       ),
@@ -37,17 +39,25 @@ class HourlyForecastStrip extends StatelessWidget {
 }
 
 class _HourlyItem extends StatelessWidget {
-  const _HourlyItem({required this.hour, required this.isNow});
+  const _HourlyItem({
+    required this.hour,
+    required this.isNow,
+    required this.isCelsius,
+  });
 
   final HourlyWeather hour;
   final bool isNow;
+  final bool isCelsius;
 
   @override
   Widget build(BuildContext context) {
     final accentColor = WeatherIcons.color(hour.weatherCode);
+    final temp = isCelsius
+        ? '${hour.temperature.round()}°'
+        : '${_toF(hour.temperature).round()}°';
 
     return Container(
-      width: 70,
+      width: 72,
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
@@ -56,18 +66,18 @@ class _HourlyItem extends StatelessWidget {
           end: Alignment.bottomCenter,
           colors: isNow
               ? [
-                  accentColor.withValues(alpha: 0.3),
-                  accentColor.withValues(alpha: 0.1),
+                  accentColor.withValues(alpha: 0.28),
+                  accentColor.withValues(alpha: 0.08),
                 ]
               : [
-                  Colors.white.withValues(alpha: 0.1),
+                  Colors.white.withValues(alpha: 0.09),
                   Colors.white.withValues(alpha: 0.03),
                 ],
         ),
         border: Border.all(
           color: isNow
-              ? accentColor.withValues(alpha: 0.4)
-              : Colors.white.withValues(alpha: 0.08),
+              ? accentColor.withValues(alpha: 0.45)
+              : Colors.white.withValues(alpha: 0.07),
           width: 1,
         ),
       ),
@@ -77,39 +87,50 @@ class _HourlyItem extends StatelessWidget {
           Text(
             isNow ? 'Now' : DateFormat('HH:mm').format(hour.time),
             style: TextStyle(
-              fontSize: 12,
-              color: isNow
-                  ? Colors.white
-                  : Colors.white.withValues(alpha: 0.6),
+              fontSize: 11,
+              color: isNow ? Colors.white : Colors.white.withValues(alpha: 0.55),
               fontWeight: isNow ? FontWeight.w600 : FontWeight.w400,
             ),
           ),
           Icon(
             WeatherIcons.icon(hour.weatherCode),
-            size: 26,
+            size: 24,
             color: accentColor,
           ),
           Text(
-            '${hour.temperature.round()}°',
+            temp,
             style: const TextStyle(
-              fontSize: 16,
+              fontSize: 15,
               color: Colors.white,
               fontWeight: FontWeight.w600,
             ),
           ),
           if (hour.precipitationProbability > 0)
-            Text(
-              '${hour.precipitationProbability}%',
-              style: TextStyle(
-                fontSize: 10,
-                color: Colors.lightBlueAccent.withValues(alpha: 0.8),
-                fontWeight: FontWeight.w500,
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.water_drop_rounded,
+                  size: 9,
+                  color: Colors.lightBlueAccent.withValues(alpha: 0.8),
+                ),
+                const SizedBox(width: 2),
+                Text(
+                  '${hour.precipitationProbability}%',
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: Colors.lightBlueAccent.withValues(alpha: 0.8),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
             )
           else
-            const SizedBox(height: 12),
+            const SizedBox(height: 13),
         ],
       ),
     );
   }
+
+  static double _toF(double c) => c * 9 / 5 + 32;
 }
